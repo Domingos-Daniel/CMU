@@ -1,29 +1,45 @@
 {
   "expo": {
-    "name": "CMU",
-    "slug": "CMU",
+    "name": "Calculadora de Rentabilidade",
+    "slug": "calculadora-rentabilidade-cmu",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0F172A"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cmu.calculadorarentabilidade"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0F172A"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.cmu.calculadorarentabilidade",
+      "versionCode": 1,
+      "permissions": []
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "owner": "domingos-daniel",
+    "extra": {
+      "eas": {
+        "projectId": "bdb2399f-165d-468c-9c01-65db6ac8d4bd"
+      }
+    },
+    "plugins": [
+      "expo-dev-client"
+    ]
   }
 }

@@ -16,80 +16,83 @@ import {
 } from 'react-native';
 
 export default function App() {
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
-  const [age, setAge] = useState(null);
-  const [ageDetails, setAgeDetails] = useState(null);
+  const [totalSales, setTotalSales] = useState('');
+  const [totalCosts, setTotalCosts] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [results, setResults] = useState(null);
 
-  const monthInputRef = useRef(null);
-  const yearInputRef = useRef(null);
+  const costsInputRef = useRef(null);
+  const companyInputRef = useRef(null);
   const scrollViewRef = useRef(null);
 
-  const calculateAge = () => {
-    if (!day || !month || !year) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'AOA' // Kwanza Angolano
+    }).format(value);
+  };
+
+  const formatPercentage = (value) => {
+    return `${(value * 100).toFixed(2)}%`;
+  };
+
+  const calculateProfitability = () => {
+    if (!totalSales || !totalCosts) {
+      Alert.alert('Erro', 'Por favor, preencha os campos de Vendas e Custos');
       return;
     }
 
-    const dayNum = parseInt(day);
-    const monthNum = parseInt(month);
-    const yearNum = parseInt(year);
+    const sales = parseFloat(totalSales.replace(/[^\d.,]/g, '').replace(',', '.'));
+    const costs = parseFloat(totalCosts.replace(/[^\d.,]/g, '').replace(',', '.'));
 
     // Validações básicas
-    if (dayNum < 1 || dayNum > 31) {
-      Alert.alert('Erro', 'Dia deve estar entre 1 e 31');
+    if (isNaN(sales) || sales <= 0) {
+      Alert.alert('Erro', 'Vendas totais deve ser um valor válido maior que zero');
       return;
     }
-    if (monthNum < 1 || monthNum > 12) {
-      Alert.alert('Erro', 'Mês deve estar entre 1 e 12');
-      return;
-    }
-    if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
-      Alert.alert('Erro', 'Ano inválido');
+    if (isNaN(costs) || costs < 0) {
+      Alert.alert('Erro', 'Custos totais deve ser um valor válido');
       return;
     }
 
-    const birthDate = new Date(yearNum, monthNum - 1, dayNum);
-    const today = new Date();
+    // Cálculos
+    const profit = sales - costs;
+    const profitabilityPercentage = sales > 0 ? profit / sales : 0;
+    const profitMargin = sales > 0 ? (profit / sales) * 100 : 0;
+    const costPercentage = sales > 0 ? (costs / sales) * 100 : 0;
 
-    // Verificar se a data é válida
-    if (birthDate.getDate() !== dayNum || birthDate.getMonth() !== monthNum - 1) {
-      Alert.alert('Erro', 'Data inválida');
-      return;
+    // Determinar status da empresa
+    let businessStatus = '';
+    let statusColor = '';
+    if (profit > 0) {
+      if (profitabilityPercentage >= 0.20) {
+        businessStatus = 'Excelente';
+        statusColor = '#10B981'; // Verde
+      } else if (profitabilityPercentage >= 0.10) {
+        businessStatus = 'Boa';
+        statusColor = '#3B82F6'; // Azul
+      } else {
+        businessStatus = 'Regular';
+        statusColor = '#F59E0B'; // Laranja
+      }
+    } else if (profit === 0) {
+      businessStatus = 'Ponto de Equilíbrio';
+      statusColor = '#6B7280'; // Cinza
+    } else {
+      businessStatus = 'Prejuízo';
+      statusColor = '#EF4444'; // Vermelho
     }
 
-    if (birthDate > today) {
-      Alert.alert('Erro', 'Data de nascimento não pode ser no futuro');
-      return;
-    }
-
-    // Calcular idade
-    let ageYears = today.getFullYear() - birthDate.getFullYear();
-    let ageMonths = today.getMonth() - birthDate.getMonth();
-    let ageDays = today.getDate() - birthDate.getDate();
-
-    if (ageDays < 0) {
-      ageMonths--;
-      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-      ageDays += lastMonth.getDate();
-    }
-
-    if (ageMonths < 0) {
-      ageYears--;
-      ageMonths += 12;
-    }
-
-    // Calcular dias totais vividos
-    const diffTime = Math.abs(today - birthDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    setAge(ageYears);
-    setAgeDetails({
-      years: ageYears,
-      months: ageMonths,
-      days: ageDays,
-      totalDays: diffDays
+    setResults({
+      sales,
+      costs,
+      profit,
+      profitabilityPercentage,
+      profitMargin,
+      costPercentage,
+      businessStatus,
+      statusColor,
+      companyName: companyName || 'Empresa'
     });
 
     // Fechar o teclado
@@ -102,11 +105,10 @@ export default function App() {
   };
 
   const clearFields = () => {
-    setDay('');
-    setMonth('');
-    setYear('');
-    setAge(null);
-    setAgeDetails(null);
+    setTotalSales('');
+    setTotalCosts('');
+    setCompanyName('');
+    setResults(null);
     Keyboard.dismiss();
   };
 
@@ -128,58 +130,53 @@ export default function App() {
             keyboardShouldPersistTaps="handled"
           >
           <View style={styles.header}>
-            <Text style={styles.title}>Calculadora de Idade</Text>
-            <Text style={styles.subtitle}>Descubra sua idade exata</Text>
+            <Text style={styles.title}>Calculadora de Rentabilidade</Text>
+            <Text style={styles.subtitle}>Analise a eficácia da sua empresa</Text>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Data de Nascimento</Text>
+            <Text style={styles.label}>Nome da Empresa (Opcional)</Text>
+            <TextInput
+              style={styles.companyInput}
+              value={companyName}
+              onChangeText={setCompanyName}
+              placeholder="Digite o nome da empresa"
+              placeholderTextColor="#9CA3AF"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => costsInputRef.current?.focus()}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Dados Financeiros</Text>
             
-            <View style={styles.dateInputContainer}>
+            <View style={styles.financialInputContainer}>
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>Dia</Text>
+                <Text style={styles.inputLabel}>Vendas Totais</Text>
                 <TextInput
                   style={styles.input}
-                  value={day}
-                  onChangeText={setDay}
-                  placeholder="DD"
+                  value={totalSales}
+                  onChangeText={setTotalSales}
+                  placeholder="0,00"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="numeric"
-                  maxLength={2}
                   returnKeyType="next"
                   blurOnSubmit={false}
-                  onSubmitEditing={() => monthInputRef.current?.focus()}
+                  onSubmitEditing={() => costsInputRef.current?.focus()}
                 />
               </View>
               
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>Mês</Text>
+                <Text style={styles.inputLabel}>Custos Totais</Text>
                 <TextInput
-                  ref={monthInputRef}
+                  ref={costsInputRef}
                   style={styles.input}
-                  value={month}
-                  onChangeText={setMonth}
-                  placeholder="MM"
+                  value={totalCosts}
+                  onChangeText={setTotalCosts}
+                  placeholder="0,00"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="numeric"
-                  maxLength={2}
-                  returnKeyType="next"
-                  blurOnSubmit={false}
-                  onSubmitEditing={() => yearInputRef.current?.focus()}
-                />
-              </View>
-              
-              <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>Ano</Text>
-                <TextInput
-                  ref={yearInputRef}
-                  style={[styles.input, styles.yearInput]}
-                  value={year}
-                  onChangeText={setYear}
-                  placeholder="AAAA"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="numeric"
-                  maxLength={4}
                   returnKeyType="done"
                   blurOnSubmit={true}
                   onSubmitEditing={dismissKeyboard}
@@ -189,8 +186,8 @@ export default function App() {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.calculateButton} onPress={calculateAge}>
-              <Text style={styles.calculateButtonText}>Calcular Idade</Text>
+            <TouchableOpacity style={styles.calculateButton} onPress={calculateProfitability}>
+              <Text style={styles.calculateButtonText}>Calcular Rentabilidade</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.clearButton} onPress={clearFields}>
@@ -198,33 +195,53 @@ export default function App() {
             </TouchableOpacity>
           </View>
 
-          {ageDetails && (
+          {results && (
             <View style={styles.resultContainer}>
-              <Text style={styles.resultTitle}>Sua Idade</Text>
-              <View style={styles.ageCard}>
-                <Text style={styles.ageNumber}>{age}</Text>
-                <Text style={styles.ageText}>{age === 1 ? 'ano' : 'anos'}</Text>
+              <Text style={styles.resultTitle}>Análise Financeira - {results.companyName}</Text>
+              
+              <View style={styles.statusCard}>
+                <Text style={[styles.statusText, { color: results.statusColor }]}>
+                  {results.businessStatus}
+                </Text>
+              </View>
+
+              <View style={styles.profitCard}>
+                <Text style={styles.profitLabel}>Lucro</Text>
+                <Text style={[styles.profitNumber, { color: results.profit >= 0 ? '#10B981' : '#EF4444' }]}>
+                  {formatCurrency(results.profit)}
+                </Text>
               </View>
               
               <View style={styles.detailsContainer}>
                 <View style={styles.detailCard}>
-                  <Text style={styles.detailNumber}>{ageDetails.years}</Text>
-                  <Text style={styles.detailLabel}>{ageDetails.years === 1 ? 'Ano' : 'Anos'}</Text>
+                  <Text style={styles.detailNumber}>{formatPercentage(results.profitabilityPercentage)}</Text>
+                  <Text style={styles.detailLabel}>Rentabilidade</Text>
                 </View>
                 <View style={styles.detailCard}>
-                  <Text style={styles.detailNumber}>{ageDetails.months}</Text>
-                  <Text style={styles.detailLabel}>{ageDetails.months === 1 ? 'Mês' : 'Meses'}</Text>
+                  <Text style={styles.detailNumber}>{results.profitMargin.toFixed(1)}%</Text>
+                  <Text style={styles.detailLabel}>Margem de Lucro</Text>
                 </View>
                 <View style={styles.detailCard}>
-                  <Text style={styles.detailNumber}>{ageDetails.days}</Text>
-                  <Text style={styles.detailLabel}>{ageDetails.days === 1 ? 'Dia' : 'Dias'}</Text>
+                  <Text style={styles.detailNumber}>{results.costPercentage.toFixed(1)}%</Text>
+                  <Text style={styles.detailLabel}>% Custos</Text>
                 </View>
               </View>
               
-              <View style={styles.totalDaysContainer}>
-                <Text style={styles.totalDaysText}>
-                  Você viveu <Text style={styles.totalDaysNumber}>{ageDetails.totalDays}</Text> {ageDetails.totalDays === 1 ? 'dia' : 'dias'}
-                </Text>
+              <View style={styles.summaryContainer}>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Vendas Totais:</Text>
+                  <Text style={styles.summaryValue}>{formatCurrency(results.sales)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Custos Totais:</Text>
+                  <Text style={styles.summaryValue}>{formatCurrency(results.costs)}</Text>
+                </View>
+                <View style={[styles.summaryRow, styles.summaryRowHighlight]}>
+                  <Text style={styles.summaryLabelBold}>Lucro Líquido:</Text>
+                  <Text style={[styles.summaryValueBold, { color: results.profit >= 0 ? '#10B981' : '#EF4444' }]}>
+                    {formatCurrency(results.profit)}
+                  </Text>
+                </View>
               </View>
             </View>
           )}
@@ -232,7 +249,7 @@ export default function App() {
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   </SafeAreaView>
-);
+  );
 }
 
 const styles = StyleSheet.create({
@@ -257,10 +274,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#94A3B8',
+    textAlign: 'center',
   },
   inputContainer: {
     marginBottom: 30,
@@ -272,10 +291,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  dateInputContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
+  companyInput: {
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    borderWidth: 2,
+    borderColor: '#334155',
+  },
+  financialInputContainer: {
+    gap: 16,
   },
   inputWrapper: {
     flex: 1,
@@ -295,9 +322,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderWidth: 2,
     borderColor: '#334155',
-  },
-  yearInput: {
-    flex: 1.5,
   },
   buttonContainer: {
     gap: 12,
@@ -335,8 +359,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 20,
+    textAlign: 'center',
   },
-  ageCard: {
+  statusCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#334155',
+  },
+  statusText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  profitCard: {
     backgroundColor: '#1E293B',
     borderRadius: 20,
     padding: 30,
@@ -345,15 +383,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#3B82F6',
   },
-  ageNumber: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-  },
-  ageText: {
-    fontSize: 18,
+  profitLabel: {
+    fontSize: 16,
     color: '#94A3B8',
-    marginTop: 4,
+    marginBottom: 8,
+  },
+  profitNumber: {
+    fontSize: 36,
+    fontWeight: 'bold',
   },
   detailsContainer: {
     flexDirection: 'row',
@@ -372,7 +409,7 @@ const styles = StyleSheet.create({
     borderColor: '#334155',
   },
   detailNumber: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#10B981',
   },
@@ -380,22 +417,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94A3B8',
     marginTop: 4,
+    textAlign: 'center',
   },
-  totalDaysContainer: {
+  summaryContainer: {
     backgroundColor: '#1E293B',
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
     width: '100%',
     borderWidth: 1,
     borderColor: '#334155',
   },
-  totalDaysText: {
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  summaryRowHighlight: {
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+    marginTop: 12,
+    paddingTop: 16,
+  },
+  summaryLabel: {
     fontSize: 16,
     color: '#94A3B8',
-    textAlign: 'center',
   },
-  totalDaysNumber: {
+  summaryValue: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  summaryLabelBold: {
+    fontSize: 18,
+    color: '#FFFFFF',
     fontWeight: 'bold',
-    color: '#F59E0B',
+  },
+  summaryValueBold: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
