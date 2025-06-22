@@ -24,6 +24,7 @@ export default function App() {
   const costsInputRef = useRef(null);
   const companyInputRef = useRef(null);
   const scrollViewRef = useRef(null);
+  const profitSectionRef = useRef(null);
 
   const formatInputValue = (value) => {
     // Remove tudo que não é número
@@ -226,9 +227,16 @@ export default function App() {
     // Fechar o teclado
     Keyboard.dismiss();
 
-    // Scroll para a seção de resultados após um pequeno delay
+    // Scroll para a seção de lucro após um pequeno delay
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
+      // Calculo aproximado da posição da seção de lucro
+      // Header (~140px) + Inputs (~300px) + Botões (~100px) + Status (~80px) = ~620px
+      const profitSectionPosition = 620;
+      scrollViewRef.current?.scrollTo({ 
+        x: 0, 
+        y: profitSectionPosition, 
+        animated: true 
+      });
     }, 300);
   };
 
@@ -336,7 +344,7 @@ export default function App() {
                 </Text>
               </View>
 
-              <View style={styles.profitCard}>
+              <View ref={profitSectionRef} style={styles.profitCard}>
                 <Text style={styles.profitLabel}>Lucro</Text>
                 <Text style={[styles.profitNumber, { color: results.profit >= 0 ? '#10B981' : '#EF4444' }]}>
                   {formatCurrency(results.profit)}
