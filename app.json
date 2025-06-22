@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Calculadora de Rentabilidade",
-    "slug": "calculadora-rentabilidade-cmu",
+    "slug": "kmove",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,10 +32,10 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "owner": "domingos-daniel",
+    "owner": "mr_daniel",
     "extra": {
       "eas": {
-        "projectId": "bdb2399f-165d-468c-9c01-65db6ac8d4bd"
+        "projectId": "e7d8179a-ba6b-4bd1-918d-2c0f96c54123"
       }
     },
     "plugins": [
